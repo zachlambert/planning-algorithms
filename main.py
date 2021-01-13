@@ -6,13 +6,16 @@ from a_star import SearchSpaceGrid, PlannerAStar
 
 def main():
 
+    width = 800
+    height = 600
+    resolution = 5
+
     pg.init()
     pg.display.set_caption("Path Planning")
-    window = pg.display.set_mode((800, 600))
+    window = pg.display.set_mode((width, height))
 
     occ_map = generate_maze(16, 12, 8, 4)
 
-    resolution = 5
     background = pg.Surface(
         (occ_map.shape[0]*resolution, occ_map.shape[1]*resolution))
     background.fill(pg.Color("#FFFFFF"))
@@ -30,32 +33,58 @@ def main():
         raise Exception("Invalid goal position")
 
     sspace = SearchSpaceGrid(occ_map)
-    planner = PlannerAStar(sspace)
-    planner.setup_drawing(resolution)
 
-    manager = pgu.UIManager((800, 600))
+    manager = pgu.UIManager((width, height))
     clock = pg.time.Clock()
 
-    start_button = pgu.elements.UIButton(
-        relative_rect=pg.Rect((10, 10), (100, 40)),
-        text="Start",
-        manager=manager)
+    planners = ["Wavefront", "Dikstras", "A*", "RRT*"]
+    buttons = []
+    button_width = 100
+    button_height = 40
+    button_spacing = 20
+    button_box_height = len(planners)*(button_height + button_spacing) - button_spacing
+    button_y = int(height/2) - int(button_box_height/2)
 
+    for planner in planners:
+        buttons.append(pgu.elements.UIButton(
+            relative_rect=pg.Rect(
+                (int(width/2 - button_width/2), button_y,
+                 button_width, button_height)),
+            text=planner,
+            manager=manager
+        ))
+        button_y += button_height + button_spacing
+
+    planner = None
     while True:
-        planner.update()
+        if planner is not None:
+            planner.update()
+
         dt = clock.tick()/1000.0
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.USEREVENT:
                 if event.user_type == pgu.UI_BUTTON_PRESSED:
-                    planner.start(start, goal)
-                    start_button.kill()
+                    for i, button in enumerate(buttons):
+                        if event.ui_element != button:
+                            continue
+                        if planners[i] == "A*":
+                            planner = PlannerAStar(sspace)
+                            planner.setup_drawing(resolution)
+                            planner.start(start, goal)
+                            break
+                    if planner is not None:
+                        for button in buttons:
+                            button.kill()
+                    else:
+                        print("Not implemented yet")
             manager.process_events(event)
         manager.update(dt)
 
         window.blit(background, (0, 0))
-        planner.draw(window)
+        if planner is not None:
+            planner.draw(window)
         manager.draw_ui(window)
 
         pg.display.update()

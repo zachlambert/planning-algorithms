@@ -3,10 +3,10 @@ import pygame as pg
 import random
 
 class MazeGenerator:
-    def __init__(self, width, height, resolution, cell_width, wall_width=2):
+    def __init__(self, screen_width, screen_height, resolution, cell_width, wall_width=2):
         self.resolution = resolution
-        map_width = width/resolution
-        map_height = height/resolution
+        map_width = screen_width/resolution
+        map_height = screen_height/resolution
 
         self.cell_width = cell_width
         self.wall_width = wall_width
@@ -18,13 +18,13 @@ class MazeGenerator:
         self.width = int(map_width/cell_width)
         self.height = int(map_height/cell_width)
 
-        self.occ_map = np.full((cell_width*width, cell_width*height), True)
+        self.occ_map = np.full((cell_width*self.width, cell_width*self.height), True)
 
         self.surface = pg.Surface(
             (self.occ_map.shape[0]*resolution, self.occ_map.shape[1]*resolution))
         self.surface.fill(pg.Color("#444444"))
 
-        self.visited = np.zeros((width, height), bool)
+        self.visited = np.zeros((self.width, self.height), bool)
         self.nodes = [np.array([0, 0])]
         self.displacements = [
             np.array([-1, 0]), np.array([1, 0]),

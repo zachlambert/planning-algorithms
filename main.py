@@ -15,16 +15,9 @@ def main():
     pg.display.set_caption("Path Planning")
     window = pg.display.set_mode((width, height))
 
-    maze_generator = MazeGenerator(width, height, resolution, 5)
-    while (not maze_generator.complete):
-        maze_generator.update()
+    maze = MazeGenerator(width, height, resolution, 6)
 
-    occ_map = maze_generator.occ_map
-    start = maze_generator.start
-    goal = maze_generator.goal
-    background = maze_generator.surface
-
-    sspace = SearchSpaceGrid(occ_map, resolution)
+    sspace = None
 
     manager = pgu.UIManager((width, height))
     clock = pg.time.Clock()
@@ -35,20 +28,26 @@ def main():
     button_height = 40
     button_spacing = 20
     button_box_height = len(planners)*(button_height + button_spacing) - button_spacing
-    button_y = int(height/2) - int(button_box_height/2)
 
-    for planner in planners:
-        buttons.append(pgu.elements.UIButton(
-            relative_rect=pg.Rect(
-                (int(width/2 - button_width/2), button_y,
-                 button_width, button_height)),
-            text=planner,
-            manager=manager
-        ))
-        button_y += button_height + button_spacing
+    def create_buttons():
+        button_y = int(height/2) - int(button_box_height/2)
+        for planner in planners:
+            buttons.append(pgu.elements.UIButton(
+                relative_rect=pg.Rect(
+                    (int(width/2 - button_width/2), button_y,
+                     button_width, button_height)),
+                text=planner,
+                manager=manager
+            ))
+            button_y += button_height + button_spacing
 
     planner = None
     while True:
+        if not maze.complete:
+            maze.update()
+            if maze.complete:
+                create_buttons()
+                sspace = SearchSpaceGrid(maze.occ_map, resolution)
         if planner is not None:
             planner.update()
 
@@ -63,7 +62,7 @@ def main():
                             continue
                         if planners[i] == "A*":
                             planner = PlannerAStar(sspace)
-                            planner.start(start, goal)
+                            planner.start(maze.start, maze.goal)
                             break
                     if planner is not None:
                         for button in buttons:
@@ -73,7 +72,7 @@ def main():
             manager.process_events(event)
         manager.update(dt)
 
-        window.blit(background, (0, 0))
+        window.blit(maze.surface, (0, 0))
         if planner is not None:
             planner.draw(window)
         manager.draw_ui(window)

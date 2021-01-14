@@ -2,19 +2,20 @@ import numpy as np
 import pygame as pg
 import pygame_gui as pgu
 from occ_map import generate_maze
-from a_star import SearchSpaceGrid, PlannerAStar
+from search_space import SearchSpaceGrid
+from a_star import PlannerAStar
 
 def main():
 
     width = 800
     height = 600
-    resolution = 5
+    resolution = 4
 
     pg.init()
     pg.display.set_caption("Path Planning")
     window = pg.display.set_mode((width, height))
 
-    occ_map = generate_maze(16, 12, 8, 4)
+    occ_map, start, goal = generate_maze(width/resolution, height/resolution, 5)
 
     background = pg.Surface(
         (occ_map.shape[0]*resolution, occ_map.shape[1]*resolution))
@@ -25,14 +26,7 @@ def main():
                 background.fill("#444444",
                     (x*resolution, y*resolution, resolution, resolution))
 
-    start = np.array([5, 5])
-    goal = np.array([15*10 + 5, 11*10 + 5])
-    if occ_map[start[0], start[1]]:
-        raise Exception("Invalid start position")
-    if occ_map[goal[0], goal[1]]:
-        raise Exception("Invalid goal position")
-
-    sspace = SearchSpaceGrid(occ_map)
+    sspace = SearchSpaceGrid(occ_map, resolution)
 
     manager = pgu.UIManager((width, height))
     clock = pg.time.Clock()
@@ -71,7 +65,6 @@ def main():
                             continue
                         if planners[i] == "A*":
                             planner = PlannerAStar(sspace)
-                            planner.setup_drawing(resolution)
                             planner.start(start, goal)
                             break
                     if planner is not None:

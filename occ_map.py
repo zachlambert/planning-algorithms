@@ -1,11 +1,14 @@
 import numpy as np
 import random
 
-def generate_maze(width, height, path_width, wall_width):
+def generate_maze(map_width, map_height, cell_width, wall_width=2):
     if wall_width % 2 == 1:
         wall_width += 1
     wall_half = int(wall_width/2)
-    cell_width = path_width + wall_half
+    path_width = cell_width - wall_width
+
+    width = int(map_width/cell_width)
+    height = int(map_height/cell_width)
 
     occ_map = np.full((cell_width*width, cell_width*height), True)
 
@@ -56,4 +59,7 @@ def generate_maze(width, height, path_width, wall_width):
         if not valid_node:
             nodes.pop()
 
-    return occ_map
+    start = np.array([int(cell_width/2), int(cell_width/2)])
+    goal = np.array([int(occ_map.shape[0] - cell_width/2), int(occ_map.shape[1] - cell_width/2)])
+
+    return occ_map, start, goal

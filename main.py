@@ -1,7 +1,7 @@
 import numpy as np
 import pygame as pg
 import pygame_gui as pgu
-from occ_map import generate_maze
+from occ_map import MazeGenerator
 from search_space import SearchSpaceGrid
 from a_star import PlannerAStar
 
@@ -15,16 +15,14 @@ def main():
     pg.display.set_caption("Path Planning")
     window = pg.display.set_mode((width, height))
 
-    occ_map, start, goal = generate_maze(width/resolution, height/resolution, 5)
+    maze_generator = MazeGenerator(width, height, resolution, 5)
+    while (not maze_generator.complete):
+        maze_generator.update()
 
-    background = pg.Surface(
-        (occ_map.shape[0]*resolution, occ_map.shape[1]*resolution))
-    background.fill(pg.Color("#FFFFFF"))
-    for x in range(occ_map.shape[0]):
-        for y in range(occ_map.shape[1]):
-            if occ_map[x, y]:
-                background.fill("#444444",
-                    (x*resolution, y*resolution, resolution, resolution))
+    occ_map = maze_generator.occ_map
+    start = maze_generator.start
+    goal = maze_generator.goal
+    background = maze_generator.surface
 
     sspace = SearchSpaceGrid(occ_map, resolution)
 

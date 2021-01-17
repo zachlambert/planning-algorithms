@@ -11,8 +11,8 @@ class Planner:
     def update(self):
         raise NotImplementedError("Not implemented")
 
-    def draw(self, surface):
-        self.sspace.draw(surface)
+    def draw(self, surface, pos=(0, 0)):
+        self.sspace.draw(surface, pos)
 
 class PlannerAStar(Planner):
     def __init__(self, search_space):

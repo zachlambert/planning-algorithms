@@ -1,0 +1,15 @@
+{
+    "colours":
+    {
+        "normal_bg": "#000000"
+    },
+
+    "button":
+    {
+        "colours":
+        {
+            "normal_bg": "#202020",
+            "normal_text": "#A0A0A0"
+        }
+    }
+}

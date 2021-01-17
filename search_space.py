@@ -77,8 +77,8 @@ class SearchSpaceGrid(SearchSpace):
         self.draw_index = index
         self.draw_color = color
 
-    def draw(self, surface):
-        surface.blit(self.surface, (0, 0))
+    def draw(self, surface, pos=(0, 0)):
+        surface.blit(self.surface, pos)
 
     def draw_path(self, nodes):
         for node in nodes:

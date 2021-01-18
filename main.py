@@ -27,12 +27,19 @@ class WindowLayout:
              width,
              height - occ_map_y))
 
-    def top_bar_element_rect(self, i):
-        return pg.Rect((
-            self.button_padding*(i+1) + self.button_width*i,
-            self.button_padding,
-            self.button_width,
-            self.button_height))
+    def top_bar_element_rect(self, i, right=False):
+        if not right:
+            return pg.Rect((
+                self.button_padding*(i+1) + self.button_width*i,
+                self.button_padding,
+                self.button_width,
+                self.button_height))
+        else:
+            return pg.Rect((
+                self.width - (self.button_padding*(i+1) + self.button_width*(i+1)),
+                self.button_padding,
+                self.button_width,
+                self.button_height))
 
 class Window:
     def __init__(self, width, height):
@@ -56,8 +63,13 @@ class Window:
             manager=self.manager)
 
         self.button_reset = pgu.elements.UIButton(
-            self.layout.top_bar_element_rect(2),
+            self.layout.top_bar_element_rect(0, True),
             text="Reset",
+            manager=self.manager)
+
+        self.button_maze = pgu.elements.UIButton(
+            self.layout.top_bar_element_rect(1, True),
+            text="Gen Maze",
             manager=self.manager)
 
         self.resolution = 5
@@ -73,7 +85,7 @@ class Window:
         self.start = (0, 0)
         self.goal = (0, 0)
 
-        self.maze = MazeGenerator(self.occ_map, 10)
+        self.maze = None
         self.planner = None
 
     def pos_to_node(self, pos):
@@ -93,8 +105,10 @@ class Window:
             print("Not implemented")
 
     def update(self, dt):
-        if not self.maze.complete:
+        if self.maze is not None:
             self.maze.update(self.occ_map)
+            if self.maze.complete:
+                maze = None
         if self.planner is not None:
             self.planner.update()
 
@@ -103,8 +117,20 @@ class Window:
                 return False
             elif event.type == pg.USEREVENT:
                 if event.user_type == pgu.UI_BUTTON_PRESSED:
-                    if event.ui_element == self.button_plan and self.maze.complete:
+                    if event.ui_element == self.button_plan:
+                        if self.maze is not None:
+                            self.maze = None
                         self.start_planner(self.selected_planner)
+                    elif event.ui_element == self.button_reset:
+                        self.occ_map.reset()
+                    elif event.ui_element == self.button_maze:
+                        if self.maze is None:
+                            self.maze = MazeGenerator(self.occ_map, 10)
+                            self.button_maze.text = "Stop Maze"
+                        else:
+                            self.maze = None
+                            self.button_maze.text = "Gen Maze"
+
                 elif event.user_type == pgu.UI_DROP_DOWN_MENU_CHANGED:
                     if event.ui_element == self.drop_down_planner:
                         self.selected_planner = event.text

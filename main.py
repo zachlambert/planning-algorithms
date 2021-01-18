@@ -62,13 +62,27 @@ class Window:
             text="Plan",
             manager=self.manager)
 
-        self.button_reset = pgu.elements.UIButton(
+        self.button_mode = pgu.elements.UIButton(
+            self.layout.top_bar_element_rect(2),
+            text="Mode = Map",
+            manager=self.manager)
+
+        self.mode = "map"
+        self.mouse_1_down = False
+        self.mouse_3_down = False
+
+        self.button_clear = pgu.elements.UIButton(
             self.layout.top_bar_element_rect(0, True),
-            text="Reset",
+            text="Clear",
+            manager=self.manager)
+
+        self.button_fill = pgu.elements.UIButton(
+            self.layout.top_bar_element_rect(1, True),
+            text="Fill",
             manager=self.manager)
 
         self.button_maze = pgu.elements.UIButton(
-            self.layout.top_bar_element_rect(1, True),
+            self.layout.top_bar_element_rect(2, True),
             text="Gen Maze",
             manager=self.manager)
 
@@ -101,16 +115,22 @@ class Window:
         if planner_type=="A*":
             self.planner = PlannerAStar(sspace)
             self.planner.start(start_node, goal_node)
+            return True
         elif planner_type=="RRT*":
             print("Not implemented")
+
+        return False
 
     def update(self, dt):
         if self.maze is not None:
             self.maze.update(self.occ_map)
             if self.maze.complete:
                 maze = None
+                self.button_maze.set_text("Gen Maze")
         if self.planner is not None:
             self.planner.update()
+            if self.planner.complete:
+                self.button_plan.set_text("Clear Plan")
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -118,29 +138,73 @@ class Window:
             elif event.type == pg.USEREVENT:
                 if event.user_type == pgu.UI_BUTTON_PRESSED:
                     if event.ui_element == self.button_plan:
-                        if self.maze is not None:
-                            self.maze = None
-                        self.start_planner(self.selected_planner)
-                    elif event.ui_element == self.button_reset:
-                        self.occ_map.reset()
+                        if self.planner is None:
+                            if self.start_planner(self.selected_planner):
+                                if self.maze is not None:
+                                    self.maze = None
+                                self.button_plan.set_text("Stop")
+                        else:
+                            self.planner = None
+                            self.button_plan.set_text("Plan")
+
+                    elif event.ui_element == self.button_clear:
+                        self.occ_map.clear()
+                    elif event.ui_element == self.button_fill:
+                        self.occ_map.fill()
+                    elif event.ui_element == self.button_mode:
+                        if self.mode == "plan":
+                            self.mode = "map"
+                            self.button_mode.set_text("Mode = Map")
+                        else:
+                            self.mode = "plan"
+                            self.button_mode.set_text("Mode = Plan")
+                            self.mouse_1_down = False
+                            self.mouse_3_down = False
                     elif event.ui_element == self.button_maze:
                         if self.maze is None:
                             self.maze = MazeGenerator(self.occ_map, 10)
-                            self.button_maze.text = "Stop Maze"
+                            self.button_maze.set_text("Stop Maze")
                         else:
                             self.maze = None
-                            self.button_maze.text = "Gen Maze"
+                            self.button_maze.set_text("Gen Maze")
 
                 elif event.user_type == pgu.UI_DROP_DOWN_MENU_CHANGED:
                     if event.ui_element == self.drop_down_planner:
                         self.selected_planner = event.text
+
             elif event.type == pg.MOUSEBUTTONDOWN:
-                if self.occ_map.is_valid(self.pos_to_node(event.pos)):
+                if self.mode == "plan":
+                    if self.occ_map.is_valid(self.pos_to_node(event.pos)):
+                        if event.button == 1:
+                            self.start = event.pos
+                        elif event.button == 3:
+                            self.goal = event.pos
+                else:
                     if event.button == 1:
-                        self.start = event.pos
+                        self.mouse_1_down = True
+                        if self.mouse_3_down:
+                            self.mouse_3_down = False
                     elif event.button == 3:
-                        self.goal = event.pos
+                        self.mouse_3_down = True
+                        if self.mouse_1_down:
+                            self.mouse_1_down = False
+            elif event.type == pg.MOUSEBUTTONUP:
+                if self.mode == "map":
+                    if event.button == 1:
+                        self.mouse_1_down = False
+                    elif event.button == 3:
+                        self.mouse_3_down = False
+
             self.manager.process_events(event)
+
+        if self.mode == "map":
+            node = self.pos_to_node(pg.mouse.get_pos())
+            if self.occ_map.is_valid(node):
+                if self.mouse_1_down:
+                    self.occ_map.set_circle(node[0], node[1], 4, True)
+                if self.mouse_3_down:
+                    self.occ_map.set_circle(node[0], node[1], 4, False)
+
         self.manager.update(dt)
         return True
 

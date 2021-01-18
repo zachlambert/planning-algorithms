@@ -1,6 +1,7 @@
 import numpy as np
 import pygame as pg
 import random
+import math
 
 class OccupancyMap:
     def __init__(self, width, height, resolution, occ_color):
@@ -11,9 +12,9 @@ class OccupancyMap:
         self.surface = pg.Surface(
             (self.width*resolution, self.height*resolution))
         self.occ_color = occ_color
-        self.reset()
+        self.clear()
 
-    def reset(self):
+    def clear(self):
         self.surface.fill("#FFFFFF")
         self.occ_map = np.full((self.width, self.height), False)
 
@@ -34,6 +35,12 @@ class OccupancyMap:
                 (x*self.resolution, y*self.resolution,
                  self.resolution, self.resolution))
         return True
+
+    def set_circle(self, x, y, r, value):
+        for i in range(-r, r+1):
+            for j in range(-r, r+1):
+                if math.hypot(i, j) <= r:
+                    self.set(x+i, y+j, value)
 
     def is_valid(self, node):
         return node[0] >= 0 and node[0] < self.width and \

@@ -21,6 +21,7 @@ class PlannerAStar(Planner):
         self.sspace.create_variables(["g", "h", "f", "checked"])
         self.sspace.setup_drawing("g")
         self.active = False
+        self.complete = False
         self.path_nodes = []
 
     def start(self, start, goal):
@@ -32,7 +33,7 @@ class PlannerAStar(Planner):
         self.unvisited = [self.start]
         self.initialise_node(self.start, 0)
         self.active = True
-        selfurface = None
+        self.complete = False
 
     def initialise_node(self, node, g_init):
         h = self.sspace.distance(node, self.goal)
@@ -104,3 +105,4 @@ class PlannerAStar(Planner):
             current = next_node
             self.path_nodes.append(current)
         self.sspace.draw_path(self.path_nodes)
+        self.complete = True

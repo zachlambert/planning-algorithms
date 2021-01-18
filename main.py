@@ -1,7 +1,7 @@
 import numpy as np
 import pygame as pg
 import pygame_gui as pgu
-from occ_map import MazeGenerator
+from occ_map import OccupancyMap, MazeGenerator
 from search_space import SearchSpaceGrid
 from a_star import PlannerAStar
 
@@ -64,17 +64,17 @@ class Window:
 
         self.occ_color = self.manager.get_theme().get_colour("normal_bg")
 
-        self.maze = MazeGenerator(
+        self.occ_map = OccupancyMap(
             self.layout.occ_map_rect.width,
             self.layout.occ_map_rect.height,
             self.resolution,
-            self.occ_color,
-            5)
+            self.occ_color)
 
+        self.maze = MazeGenerator(self.occ_map, 10)
         self.planner = None
 
     def start_planner(self, planner_type):
-        sspace = SearchSpaceGrid(self.maze.occ_map, self.resolution)
+        sspace = SearchSpaceGrid(self.occ_map)
         if planner_type=="A*":
             self.planner = PlannerAStar(sspace)
             self.planner.start(self.maze.start, self.maze.goal)
@@ -83,7 +83,7 @@ class Window:
 
     def update(self, dt):
         if not self.maze.complete:
-            self.maze.update()
+            self.maze.update(self.occ_map)
         if self.planner is not None:
             self.planner.update()
 
@@ -104,7 +104,7 @@ class Window:
     def draw(self):
         self.surface.fill(self.occ_color, self.layout.top_bar_rect)
         self.surface.blit(
-            self.maze.surface,
+            self.occ_map.surface,
             (self.layout.occ_map_rect.x,
              self.layout.occ_map_rect.y))
         if self.planner is not None:
@@ -120,7 +120,7 @@ def main():
 
     pg.init()
     pg.display.set_caption("Path Planning")
-    window = Window(1200, 900)
+    window = Window(800, 600)
 
     clock = pg.time.Clock()
     running = True

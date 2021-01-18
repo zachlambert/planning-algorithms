@@ -2,29 +2,51 @@ import numpy as np
 import pygame as pg
 import random
 
-class MazeGenerator:
-    def __init__(self, screen_width, screen_height, resolution, occ_color, cell_width, wall_width=2):
+class OccupancyMap:
+    def __init__(self, width, height, resolution, occ_color):
+        self.width = int(width/resolution)
+        self.height = int(height/resolution)
         self.resolution = resolution
+        self.occ_map = np.full((self.width, self.height), False)
+        self.surface = pg.Surface(
+            (self.width*resolution, self.height*resolution))
         self.occ_color = occ_color
+        self.reset()
 
-        map_width = screen_width/resolution
-        map_height = screen_height/resolution
+    def reset(self):
+        self.surface.fill("#FFFFFF")
+        self.occ_map = np.full((self.width, self.height), False)
 
-        self.cell_width = cell_width
+    def fill(self):
+        self.surface.fill(self.occ_color)
+        self.occ_map = np.full((self.width, self.height), True)
+
+    def set(self, x, y, value):
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return False
+        self.occ_map[x, y] = value
+        if not value:
+            self.surface.fill("#FFFFFF",
+                (x*self.resolution, y*self.resolution,
+                 self.resolution, self.resolution))
+        else:
+            self.surface.fill(self.occ_color,
+                (x*self.resolution, y*self.resolution,
+                 self.resolution, self.resolution))
+        return True
+
+
+class MazeGenerator:
+    def __init__(self, occ_map, cell_size, wall_width=2):
+        self.width = int(occ_map.width/cell_size)
+        self.height = int(occ_map.height/cell_size)
+
+        self.cell_size = cell_size
         self.wall_width = wall_width
         if self.wall_width % 2 == 1:
             self.wall_width += 1
         self.wall_half = int(wall_width/2)
-        self.path_width = cell_width - wall_width
-
-        self.width = int(map_width/cell_width)
-        self.height = int(map_height/cell_width)
-
-        self.occ_map = np.full((cell_width*self.width, cell_width*self.height), True)
-
-        self.surface = pg.Surface(
-            (self.occ_map.shape[0]*resolution, self.occ_map.shape[1]*resolution))
-        self.surface.fill(self.occ_color)
+        self.path_width = cell_size - wall_width
 
         self.visited = np.zeros((self.width, self.height), bool)
         self.nodes = [np.array([0, 0])]
@@ -37,34 +59,40 @@ class MazeGenerator:
         self.start = None
         self.goal = None
 
-    def fill_square(self, node):
-        for i in range(self.wall_half, self.cell_width - self.wall_half):
-            for j in range(self.wall_half, self.cell_width - self.wall_half):
-                px = node[0]*self.cell_width + i
-                py = node[1]*self.cell_width + j
-                self.occ_map[px, py] = False
-                self.surface.fill("#FFFFFF",
-                    (px*self.resolution, py*self.resolution, self.resolution, self.resolution))
+        occ_map.fill()
 
-    def fill_gap(self, node, disp):
+    def fill_square(self, occ_map, node):
+        for i in range(self.wall_half, self.cell_size - self.wall_half):
+            for j in range(self.wall_half, self.cell_size - self.wall_half):
+                occ_map.set(
+                    self.cell_size*node[0] + i,
+                    self.cell_size*node[1] + j,
+                    False)
+
+    def fill_gap(self, occ_map, node, disp):
         x, y = node
-        for k in range(self.wall_half, self.cell_width - self.wall_half):
+        for k in range(self.wall_half, self.cell_size - self.wall_half):
             for l in range(-self.wall_width, self.wall_width):
                 if (disp == [1, 0]).all():
-                    px = (x+1)*self.cell_width + l
-                    py = y*self.cell_width + k
+                    occ_map.set(
+                        (x+1)*self.cell_size + l,
+                        y*self.cell_size + k,
+                        False)
                 elif (disp == [-1, 0]).all():
-                    px = x*self.cell_width + l
-                    py = y*self.cell_width + k
+                    occ_map.set(
+                        x*self.cell_size + l,
+                        y*self.cell_size + k,
+                        False)
                 elif (disp == [0, 1]).all():
-                    px = x*self.cell_width + k
-                    py = (y+1)*self.cell_width + l
+                    occ_map.set(
+                        x*self.cell_size + k,
+                        (y+1)*self.cell_size + l,
+                        False)
                 elif (disp == [0, -1]).all():
-                    px = x*self.cell_width + k
-                    py = y*self.cell_width + l
-                self.occ_map[px, py] = False
-                self.surface.fill("#FFFFFF",
-                    (px*self.resolution, py*self.resolution, self.resolution, self.resolution))
+                    occ_map.set(
+                        x*self.cell_size + k,
+                        y*self.cell_size + l,
+                        False)
 
     def valid_node(self, node):
         if node[0] < 0 or node[0] >= self.width:
@@ -73,17 +101,17 @@ class MazeGenerator:
             return False
         return True
 
-    def update(self):
+    def update(self, occ_map):
         if len(self.nodes) == 0:
             self.complete = True
-            self.start = np.array([int(self.cell_width/2), int(self.cell_width/2)])
-            self.goal = np.array([int(self.occ_map.shape[0] - self.cell_width/2),
-                                  int(self.occ_map.shape[1] - self.cell_width/2)])
+            self.start = np.array([int(self.cell_size/2), int(self.cell_size/2)])
+            self.goal = np.array([int(occ_map.occ_map.shape[0] - self.cell_size/2),
+                                  int(occ_map.occ_map.shape[1] - self.cell_size/2)])
             return
 
         x, y = self.nodes[-1]
         if not self.visited[x, y]:
-            self.fill_square(self.nodes[-1])
+            self.fill_square(occ_map, self.nodes[-1])
         self.visited[x, y] = True
 
         valid_node = False
@@ -97,7 +125,7 @@ class MazeGenerator:
             disp = self.displacements[index]
             node = self.nodes[-1] + disp
             if self.valid_node(node) and not self.visited[node[0], node[1]]:
-                self.fill_gap(self.nodes[-1], disp)
+                self.fill_gap(occ_map, self.nodes[-1], disp)
                 self.nodes.append(node)
                 valid_node = True
                 break

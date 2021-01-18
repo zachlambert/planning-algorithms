@@ -31,11 +31,11 @@ class SearchSpace:
 # 8 neighbours unless the neighbour cell is occupied.
 
 class SearchSpaceGrid(SearchSpace):
-    def __init__(self, occ_map, resolution):
-        self.occ_map = occ_map.astype(int)
+    def __init__(self, occ_map):
+        self.occ_map = occ_map.occ_map.astype(int)
         self.offsets = [np.array([x, y])
             for x in range(-1, 2) for y in range(-1, 2) if x!=0 or y!=0]
-        self.resolution = resolution
+        self.resolution = occ_map.resolution
         self.surface = pg.Surface((
             self.occ_map.shape[0]*self.resolution,
             self.occ_map.shape[1]*self.resolution), pg.SRCALPHA)

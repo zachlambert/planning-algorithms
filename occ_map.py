@@ -35,6 +35,10 @@ class OccupancyMap:
                  self.resolution, self.resolution))
         return True
 
+    def is_valid(self, node):
+        return node[0] >= 0 and node[0] < self.width and \
+               node[1] >= 0 and node[1] < self.height
+
 
 class MazeGenerator:
     def __init__(self, occ_map, cell_size, wall_width=2):
@@ -56,8 +60,6 @@ class MazeGenerator:
         ]
 
         self.complete = False
-        self.start = None
-        self.goal = None
 
         occ_map.fill()
 
@@ -104,9 +106,6 @@ class MazeGenerator:
     def update(self, occ_map):
         if len(self.nodes) == 0:
             self.complete = True
-            self.start = np.array([int(self.cell_size/2), int(self.cell_size/2)])
-            self.goal = np.array([int(occ_map.occ_map.shape[0] - self.cell_size/2),
-                                  int(occ_map.occ_map.shape[1] - self.cell_size/2)])
             return
 
         x, y = self.nodes[-1]

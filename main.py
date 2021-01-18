@@ -70,14 +70,25 @@ class Window:
             self.resolution,
             self.occ_color)
 
+        self.start = (0, 0)
+        self.goal = (0, 0)
+
         self.maze = MazeGenerator(self.occ_map, 10)
         self.planner = None
 
+    def pos_to_node(self, pos):
+        return np.array([
+            int((pos[0]-self.layout.occ_map_rect.x)/self.occ_map.resolution),
+            int((pos[1]-self.layout.occ_map_rect.y)/self.occ_map.resolution)
+        ])
+
     def start_planner(self, planner_type):
         sspace = SearchSpaceGrid(self.occ_map)
+        start_node = self.pos_to_node(self.start)
+        goal_node = self.pos_to_node(self.goal)
         if planner_type=="A*":
             self.planner = PlannerAStar(sspace)
-            self.planner.start(self.maze.start, self.maze.goal)
+            self.planner.start(start_node, goal_node)
         elif planner_type=="RRT*":
             print("Not implemented")
 
@@ -90,13 +101,19 @@ class Window:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return False
-            if event.type == pg.USEREVENT:
+            elif event.type == pg.USEREVENT:
                 if event.user_type == pgu.UI_BUTTON_PRESSED:
                     if event.ui_element == self.button_plan and self.maze.complete:
                         self.start_planner(self.selected_planner)
                 elif event.user_type == pgu.UI_DROP_DOWN_MENU_CHANGED:
                     if event.ui_element == self.drop_down_planner:
                         self.selected_planner = event.text
+            elif event.type == pg.MOUSEBUTTONDOWN:
+                if self.occ_map.is_valid(self.pos_to_node(event.pos)):
+                    if event.button == 1:
+                        self.start = event.pos
+                    elif event.button == 3:
+                        self.goal = event.pos
             self.manager.process_events(event)
         self.manager.update(dt)
         return True
@@ -112,6 +129,12 @@ class Window:
                 self.surface,
                 (self.layout.occ_map_rect.x,
                  self.layout.occ_map_rect.y))
+
+        pg.draw.circle(self.surface, "#00FF00", self.start, 5)
+        pg.draw.circle(self.surface, "#000000", self.start, 5, 2)
+        pg.draw.circle(self.surface, "#FF0000", self.goal, 5)
+        pg.draw.circle(self.surface, "#000000", self.goal, 5, 2)
+
         self.manager.draw_ui(self.surface)
 
         pg.display.update()

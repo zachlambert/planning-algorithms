@@ -64,10 +64,10 @@ class Window:
 
         self.button_mode = pgu.elements.UIButton(
             self.layout.top_bar_element_rect(2),
-            text="Mode = Map",
+            text="Mode = Plan",
             manager=self.manager)
 
-        self.mode = "map"
+        self.mode = "plan"
         self.mouse_1_down = False
         self.mouse_3_down = False
 
@@ -125,7 +125,7 @@ class Window:
         if self.maze is not None:
             self.maze.update(self.occ_map)
             if self.maze.complete:
-                maze = None
+                self.maze = None
                 self.button_maze.set_text("Gen Maze")
         if self.planner is not None:
             self.planner.update()

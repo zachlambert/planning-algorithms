@@ -117,7 +117,9 @@ class Window:
             self.planner.start(start_node, goal_node)
             return True
         elif planner_type=="RRT*":
-            print("Not implemented")
+            self.planner = planner.RRT(sspace, 100, 5)
+            self.planner.start(start_node, goal_node)
+            return True
 
         return False
 

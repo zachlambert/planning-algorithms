@@ -13,6 +13,8 @@ class StateSpace:
         raise NotImplementedError("Not implemented")
     def same_node(self, node1, node2):
         raise NotImplementedError("Not implemented")
+    def random_node(self):
+        raise NotImplementedError("Not implemented")
 
     # Search space can record a variable for each node
     # Access by index and node. Index can be an array index, or a key for a map
@@ -53,6 +55,15 @@ class StateSpaceGrid(StateSpace):
 
     def same_node(self, node1, node2):
         return (node1 == node2).all()
+
+    def random_node(self):
+        C_free = False
+        node = None
+        while not C_free:
+            node = np.random.randint(self.occ_map.shape)
+            if self._valid_state(node):
+                C_free = True
+        return node
 
     def create_variables(self, indexes):
         self.variables = {

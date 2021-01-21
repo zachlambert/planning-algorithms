@@ -117,7 +117,7 @@ class Window:
             self.planner.start(start_node, goal_node)
             return True
         elif planner_type=="RRT*":
-            self.planner = planner.RRT(sspace, 100, 5)
+            self.planner = planner.RRT(sspace, 1e4, 5)
             self.planner.start(start_node, goal_node)
             return True
 

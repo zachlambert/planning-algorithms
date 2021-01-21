@@ -1,12 +1,12 @@
 import numpy as np
 import pygame as pg
 
-# This is an abstract base class for a type of search space.
-# A search space is a graph, with a given distance metric between nodes.
+# This is an abstract base class for a type of state space.
+# A state space is a graph, with a given distance metric between nodes.
 # Each node can hold a given variable, and drawing can be setup for this
 # variable, using a pygame surface
 
-class SearchSpace:
+class StateSpace:
     def neighbours(self):
         raise NotImplementedError("Not implemented")
     def distance(self, node1, node2):
@@ -26,11 +26,11 @@ class SearchSpace:
         raise NotImplementedError("Not implemented")
 
 
-# A 2D grid is the simplest type of search space.
+# A 2D grid is the simplest type of state space.
 # It is defined by an occupancy map, where each cell is connected to its
 # 8 neighbours unless the neighbour cell is occupied.
 
-class SearchSpaceGrid(SearchSpace):
+class StateSpaceGrid(StateSpace):
     def __init__(self, occ_map):
         self.occ_map = occ_map.occ_map.astype(int)
         self.offsets = [np.array([x, y])

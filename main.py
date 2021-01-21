@@ -1,9 +1,9 @@
 import numpy as np
 import pygame as pg
 import pygame_gui as pgu
-from occ_map import OccupancyMap, MazeGenerator
-from search_space import SearchSpaceGrid
-from a_star import PlannerAStar
+from sspace import OccupancyMap, MazeGenerator
+from sspace import StateSpaceGrid
+import planner
 
 class WindowLayout:
     def __init__(self, width, height):
@@ -109,11 +109,11 @@ class Window:
         ])
 
     def start_planner(self, planner_type):
-        sspace = SearchSpaceGrid(self.occ_map)
+        sspace = StateSpaceGrid(self.occ_map)
         start_node = self.pos_to_node(self.start)
         goal_node = self.pos_to_node(self.goal)
         if planner_type=="A*":
-            self.planner = PlannerAStar(sspace)
+            self.planner = planner.AStar(sspace)
             self.planner.start(start_node, goal_node)
             return True
         elif planner_type=="RRT*":

@@ -1,22 +1,11 @@
 import pygame as pg
 import numpy as np
 
-class Planner:
+from ._planner import Planner
+
+class AStar(Planner):
     def __init__(self, sspace):
-        self.sspace = sspace
-
-    def start(self, start, goal):
-        raise NotImplementedError("NotImplemented")
-
-    def update(self):
-        raise NotImplementedError("Not implemented")
-
-    def draw(self, surface, pos=(0, 0)):
-        self.sspace.draw(surface, pos)
-
-class PlannerAStar(Planner):
-    def __init__(self, search_space):
-        super().__init__(search_space)
+        super().__init__(sspace)
         self.unvisited = []
         self.sspace.create_variables(["g", "h", "f", "checked"])
         self.sspace.setup_drawing("g")
